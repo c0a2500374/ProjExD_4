@@ -288,7 +288,7 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 if key_lst[pg.K_LSHIFT]:  # 左シフトキーも押された時
-                    beams.add(NeoBeam(bird, random.randint(2,11)).gen_beams())  # こうかとんとビーム数(2本から10本の間をランダム)を渡してBeamグループに追加
+                    beams.add(NeoBeam(bird, random.randint(2,10)).gen_beams())  # こうかとんとビーム数(2本から10本の間をランダム)を渡してBeamグループに追加
                 else:
                     beams.add(Beam(bird))
         screen.blit(bg_img, [0, 0])
