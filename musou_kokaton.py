@@ -141,14 +141,16 @@ class Beam(pg.sprite.Sprite):
     """
     ビームに関するクラス
     """
-    def __init__(self, bird: Bird):
+    def __init__(self, bird: Bird, angle0: int=0):
         """
         ビーム画像Surfaceを生成する
         引数 bird：ビームを放つこうかとん
+        引数 angle0：ビーム回転角度(デフォルトで0を設定)
         """
         super().__init__()
         self.vx, self.vy = bird.dire
         angle = math.degrees(math.atan2(-self.vy, self.vx))
+        angle += angle0
         self.image = pg.transform.rotozoom(pg.image.load(f"fig/beam.png"), angle, 1.0)
         self.vx = math.cos(math.radians(angle))
         self.vy = -math.sin(math.radians(angle))
@@ -165,6 +167,29 @@ class Beam(pg.sprite.Sprite):
         self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
         if check_bound(self.rect) != (True, True):
             self.kill()
+
+
+class NeoBeam():
+    """
+    追加機能6：複数のビームを打つクラス
+    """
+    def __init__(self, bird: Bird, num: int):
+        """
+        引数 bird：こうかとん
+        引数 num：ビームの数
+        """
+        self.bird = bird
+        self.num = num
+
+    def gen_beams(self):
+        """
+        複数のビームを作成してリストで返す関数
+        """
+        fukusuu_beam = []  #複数のビームの空のリスト作る
+        stepkazu = 100 // (self.num -1)  # -50度から+50度まで合わせて100度なので、100÷(ビームの数-1)の商で角度を進める回数を出す
+        for angle0 in range(-50, +51, stepkazu):  # -50から順に角度を進める、例:ビームが3ならステップ数は50、角度は-50,0,50になる
+            fukusuu_beam.append(Beam(self.bird, angle0))  # 作った空のリストにそれぞれの角度のビームを追加していく
+        return fukusuu_beam  # 入れ終わったリストを返す
 
 
 class Explosion(pg.sprite.Sprite):
@@ -262,7 +287,10 @@ def main():
             if event.type == pg.QUIT:
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
-                beams.add(Beam(bird))
+                if key_lst[pg.K_LSHIFT]:  # 左シフトキーも押された時
+                    beams.add(NeoBeam(bird, random.randint(2,11)).gen_beams())  # こうかとんとビーム数(2本から10本の間をランダム)を渡してBeamグループに追加
+                else:
+                    beams.add(Beam(bird))
         screen.blit(bg_img, [0, 0])
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
