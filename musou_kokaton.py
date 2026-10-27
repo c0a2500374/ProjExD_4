@@ -305,7 +305,7 @@ class Score:
     def __init__(self):
         self.font = pg.font.Font(None, 50)
         self.color = (0, 0, 255)
-        self.value = 0
+        self.value = 300
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         self.rect = self.image.get_rect()
         self.rect.center = 100, HEIGHT-50
@@ -384,7 +384,6 @@ def main():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.value += 1  # 1点アップ
 
-<<<<<<< HEAD
         for gravity in gravitys:  # 重力場内の敵機と爆弾を削除
 
             for emy in pg.sprite.spritecollide(gravity, emys, True):
@@ -403,13 +402,13 @@ def main():
             time.sleep(2)
             return
 
-    
-        bird.update(key_lst, screen)
-=======
+        bird.update(key_lst, screen, score)
+        
         for bomb in pg.sprite.spritecollide(bird, bombs, True):  # こうかとんと衝突した爆弾リスト
             if bird.state == "hyper":  # 無敵状態の場合
                 exps.add(Explosion(bomb, 50))  # 爆発エフェクト
                 score.value += 1  # 1点アップ
+            
             elif bird.state == "normal":  # 通常状態の場合    
                 bird.change_img(8, screen)  # こうかとん悲しみエフェクト
                 score.update(screen)
@@ -417,8 +416,7 @@ def main():
                 time.sleep(2)
                 return
 
-        bird.update(key_lst, screen, score)
->>>>>>> C0C25013/feature4
+        
         beams.update()
         beams.draw(screen)
         emys.update()
