@@ -115,6 +115,7 @@ class Bomb(pg.sprite.Sprite):
         引数2 bird：攻撃対象のこうかとん
         """
         super().__init__()
+        self.state = "active" 
         rad = random.randint(10, 50)  # 爆弾円の半径：10以上50以下の乱数
         self.image = pg.Surface((2*rad, 2*rad))
         color = random.choice(__class__.colors)  # 爆弾円の色：クラス変数からランダム選択
@@ -292,6 +293,23 @@ class Score:
         screen.blit(self.image, self.rect)
 
 
+#追加機能3:EMP
+class EMP:
+    def __init__(self, emys, bombs, screen):
+        for emy in emys:
+            emy.interval = float("inf")
+            emy.image = pg.transform.laplacian(emy.image)
+        for bomb in bombs:
+            bomb.speed /= 2
+            bomb.state = "inactive"
+        image = pg.Surface((WIDTH, HEIGHT))
+        image.fill((255, 255, 0))
+        image.set_alpha(127)
+        screen.blit(image, (0, 0))
+        pg.display.update()
+        pg.time.wait(50)
+
+
 def main():
     pg.display.set_caption("真！こうかとん無双")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -318,6 +336,9 @@ def main():
                 else:
                     beams.add(Beam(bird))
                 beams.add(Beam(bird))
+            if event.type == pg.KEYDOWN and event.key == pg.K_e and score.value >= 20:
+                score.value -= 20
+                EMP(emys, bombs, screen)
             if event.type == pg.KEYDOWN and event.key == pg.K_RETURN and score.value > 200:  # リターンキーで重力場の発生
                 gravitys.add(Gravity(400))
                 score.value -= 200
@@ -350,8 +371,10 @@ def main():
                 exps.add(Explosion(bomb, 50))  # 爆発エフェクト
                 score.value += 1
 
-        for bomb in pg.sprite.spritecollide(bird, bombs, True):  # こうかとんと衝突した爆弾リスト
-            bird.change_img(8, screen)  # こうかとん悲しみエフェクト
+        for bomb in pg.sprite.spritecollide(bird, bombs, True): #追加機能3:ぶつかったら起爆せずに消滅する
+            if bomb.state == "inactive":
+                continue
+            bird.change_img(8, screen)
             score.update(screen)
             pg.display.update()
             time.sleep(2)
