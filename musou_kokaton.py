@@ -305,7 +305,7 @@ class Score:
     def __init__(self):
         self.font = pg.font.Font(None, 50)
         self.color = (0, 0, 255)
-        self.value = 300
+        self.value = 0
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         self.rect = self.image.get_rect()
         self.rect.center = 100, HEIGHT-50
@@ -430,15 +430,6 @@ def main():
                 exps.add(Explosion(bomb, 50))  # 爆発エフェクト
                 score.value += 1
 
-        for bomb in pg.sprite.spritecollide(bird, bombs, True): #追加機能3:ぶつかったら起爆せずに消滅する
-            if bomb.state == "inactive":
-                continue
-            bird.change_img(8, screen)
-            score.update(screen)
-            pg.display.update()
-            time.sleep(2)
-            return
-
         blocked = pg.sprite.groupcollide(shields, bombs, False, True)
         for victims in blocked.values():
             for bomb in victims:
@@ -447,6 +438,8 @@ def main():
         bird.update(key_lst, screen, score)
         
         for bomb in pg.sprite.spritecollide(bird, bombs, True):  # こうかとんと衝突した爆弾リスト
+            if bomb.state == "inactive":
+                continue
             if bird.state == "hyper":  # 無敵状態の場合
                 exps.add(Explosion(bomb, 50))  # 爆発エフェクト
                 score.value += 1  # 1点アップ
