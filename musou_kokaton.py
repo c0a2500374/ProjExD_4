@@ -47,7 +47,7 @@ class Bird(pg.sprite.Sprite):
         pg.K_LEFT: (-1, 0),
         pg.K_RIGHT: (+1, 0),
     }
-
+    
     def __init__(self, num: int, xy: tuple[int, int]):
         """
         こうかとん画像Surfaceを生成する
@@ -67,11 +67,18 @@ class Bird(pg.sprite.Sprite):
             (0, +1): pg.transform.rotozoom(img, -90, 0.9),  # 下
             (+1, +1): pg.transform.rotozoom(img, -45, 0.9),  # 右下
         }
+        self.hyper_imgs = {
+            dire: pg.transform.laplacian(image)
+            for dire, image in self.imgs.items()
+        }
         self.dire = (+1, 0)
         self.image = self.imgs[self.dire]
         self.rect = self.image.get_rect()
         self.rect.center = xy
         self.speed = 10
+        self.state = "normal"  # normal：通常状態／hyper：無敵状態
+        self.hyper_life = 0 # 無敵状態の残り時間（フレーム数）
+        self.hyper_key_was_pressed = False
 
     def change_img(self, num: int, screen: pg.Surface):
         """
@@ -82,13 +89,26 @@ class Bird(pg.sprite.Sprite):
         self.image = pg.transform.rotozoom(pg.image.load(f"fig/{num}.png"), 0, 0.9)
         screen.blit(self.image, self.rect)
 
-    def update(self, key_lst: list[bool], screen: pg.Surface):
+    def update(self, key_lst: list[bool], screen: pg.Surface, score: "Score"):
         """
         押下キーに応じてこうかとんを移動させる
         引数1 key_lst：押下キーの真理値リスト
         引数2 screen：画面Surface
+        引数3 score：スコア
         """
         sum_mv = [0, 0]
+        hyper_key_pressed = key_lst[pg.K_RSHIFT]
+        if (hyper_key_pressed and not self.hyper_key_was_pressed
+                and self.state == "normal" and score.value >= 100):
+            self.state = "hyper"  # 無敵状態に変更
+            self.hyper_life = 500  # 無敵状態の残り時間を500フレームに設定
+            score.value -= 100
+        self.hyper_key_was_pressed = hyper_key_pressed
+        if self.state == "hyper":  # 無敵状態の場合
+            self.hyper_life -= 1  # 無敵状態の残り時間を1減算
+            if self.hyper_life <= 0:  # 無敵状態の残り時間が0以下になったら
+                self.state = "normal"  # 通常状態に戻す
+                self.image = self.imgs[self.dire]
         for k, mv in __class__.delta.items():
             if key_lst[k]:
                 sum_mv[0] += mv[0]
@@ -99,6 +119,8 @@ class Bird(pg.sprite.Sprite):
         if not (sum_mv[0] == 0 and sum_mv[1] == 0):
             self.dire = tuple(sum_mv)
             self.image = self.imgs[self.dire]
+        if self.state == "hyper":
+            self.image = self.hyper_imgs[self.dire]
         screen.blit(self.image, self.rect)
 
 
@@ -362,6 +384,7 @@ def main():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.value += 1  # 1点アップ
 
+<<<<<<< HEAD
         for gravity in gravitys:  # 重力場内の敵機と爆弾を削除
 
             for emy in pg.sprite.spritecollide(gravity, emys, True):
@@ -382,6 +405,20 @@ def main():
 
     
         bird.update(key_lst, screen)
+=======
+        for bomb in pg.sprite.spritecollide(bird, bombs, True):  # こうかとんと衝突した爆弾リスト
+            if bird.state == "hyper":  # 無敵状態の場合
+                exps.add(Explosion(bomb, 50))  # 爆発エフェクト
+                score.value += 1  # 1点アップ
+            elif bird.state == "normal":  # 通常状態の場合    
+                bird.change_img(8, screen)  # こうかとん悲しみエフェクト
+                score.update(screen)
+                pg.display.update()
+                time.sleep(2)
+                return
+
+        bird.update(key_lst, screen, score)
+>>>>>>> C0C25013/feature4
         beams.update()
         beams.draw(screen)
         emys.update()
