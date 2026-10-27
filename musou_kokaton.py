@@ -315,6 +315,38 @@ class Score:
         screen.blit(self.image, self.rect)
 
 
+class Shield(pg.sprite.Sprite):
+    def __init__(self, bird: Bird, life: int):
+        super().__init__()
+        self.bird = bird
+        self.life = life
+        self.base_image = pg.Surface(
+            (20, bird.rect.height*2)
+        )
+        pg.draw.rect(
+            self.base_image, (0, 100, 255), self.base_image.get_rect()
+        )
+        self.base_image.set_colorkey((0, 0, 0))
+        vx, vy = self.bird.dire
+        angle = math.degrees(math.atan2(-vy, vx))
+        self.image = pg.transform.rotate(self.base_image,angle)
+        self.image = self.base_image
+        self.rect = self.image.get_rect()
+
+    def update(self):
+        vx, vy = self.bird.dire
+        angle = math.degrees(math.atan2(-vy, vx))
+        self.image = pg.transform.rotate(self.base_image, angle)
+        length = math.hypot(vx, vy)
+        vx, vy = vx/length, vy/length
+        x = self.bird.rect.centerx + self.bird.rect.width*vx
+        y = self.bird.rect.centery + self.bird.rect.height*vy
+        self.rect = self.image.get_rect(center=(round(x), round(y)))
+        self.life -= 1
+        if self.life < 0:
+            self.kill()
+
+
 #追加機能3:EMP
 class EMP:
     def __init__(self, emys, bombs, screen):
@@ -343,6 +375,7 @@ def main():
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
+    shields = pg.sprite.Group()
     gravitys = pg.sprite.Group()
 
     tmr = 0
@@ -358,6 +391,10 @@ def main():
                 else:
                     beams.add(Beam(bird))
                 beams.add(Beam(bird))
+
+            if event.type == pg.KEYDOWN and event.key == pg.K_s and score.value > 50 and not shields:
+                score.value -= 50
+                shields.add(Shield(bird, 400))
             if event.type == pg.KEYDOWN and event.key == pg.K_e and score.value >= 20:
                 score.value -= 20
                 EMP(emys, bombs, screen)
@@ -402,6 +439,11 @@ def main():
             time.sleep(2)
             return
 
+        blocked = pg.sprite.groupcollide(shields, bombs, False, True)
+        for victims in blocked.values():
+            for bomb in victims:
+                exps.add(Explosion(bomb, 50))
+
         bird.update(key_lst, screen, score)
         
         for bomb in pg.sprite.spritecollide(bird, bombs, True):  # こうかとんと衝突した爆弾リスト
@@ -428,6 +470,8 @@ def main():
         exps.update()
         exps.draw(screen)
         score.update(screen)
+        shields.update()
+        shields.draw(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
